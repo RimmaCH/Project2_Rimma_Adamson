@@ -14,6 +14,10 @@ class IssueModal {
     this.cancelDeletionButtonName = 'Cancel';
     this.confirmationPopup = '[data-testid="modal:confirm"]';
     this.closeDetailModalButton = '[data-testid="icon:close"]';
+    this.comment = '[data-testid="issue-comment"]';
+    this.addCommentField = 'textarea[placeholder="Add a comment..."]';
+    this.newComment = 'TEST_COMMENT';
+    this.editedComment = 'TEST_COMMENT_EDITED';
   }
 
   getIssueModal() {
@@ -22,6 +26,52 @@ class IssueModal {
 
   getIssueDetailModal() {
     return cy.get(this.issueDetailModal);
+  }
+
+  getIssueDetailsModal() {
+    cy.get(this.issueDetailModal);
+  }
+
+  addComment() {
+    cy.get(this.issueDetailModal).within(() => {
+      cy.contains('Add a comment...').click();
+
+      cy.get(this.addCommentField).type(this.newComment);
+
+      cy.contains('button', 'Save').click().should('not.exist');
+
+      cy.contains('Add a comment...').should('exist');
+      cy.get(this.comment).should('contain', this.newComment);
+    });
+  }
+
+  editComment() {
+    cy.get(this.issueDetailModal).within(() => {
+      cy.get(this.comment).first().contains('Edit').click().should('not.exist');
+      cy.get(this.addCommentField)
+        .should('contain', this.newComment)
+        .clear()
+        .type(this.editedComment);
+      cy.contains('button', 'Save').click().should('not.exist');
+      cy.get(this.comment)
+        .should('contain', 'Edit')
+        .and('contain', this.editedComment);
+    });
+  }
+
+  deleteComment() {
+    cy.get(this.issueDetailModal).find(this.comment).contains('Delete').click();
+  }
+
+  confirmCommentDeletion() {
+    cy.get(this.confirmationPopup)
+      .contains('button', 'Delete comment')
+      .click()
+      .should('not.exist');
+  }
+
+  ensureTheCommentIsDeleted() {
+    cy.get(this.issueDetailModal).find(this.comment).should('not.exist');
   }
 
   selectIssueType(issueType) {
@@ -45,7 +95,7 @@ class IssueModal {
   }
 
   createIssue(issueDetails) {
-    this.getIssueModal().within(() => {
+    getIssueModal().within(() => {
       this.selectIssueType(issueDetails.type);
       this.editDescription(issueDetails.description);
       this.editTitle(issueDetails.title);
